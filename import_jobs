@@ -1,0 +1,17 @@
+create table if not exists public.import_jobs (
+  id uuid primary key default gen_random_uuid(),
+  center_id uuid not null references public.centers(id) on delete cascade,
+  file_name varchar(255) not null,
+  import_type varchar(30) not null
+    check (import_type in ('batch', 'progress', 'shift', 'staff')),
+  total_rows int not null default 0,
+  success_rows int not null default 0,
+  error_rows int not null default 0,
+  status varchar(20) not null default 'uploaded'
+    check (status in ('uploaded', 'processing', 'completed', 'failed')),
+  executed_by uuid references public.profiles(id) on delete set null,
+  executed_at timestamptz not null default now()
+);
+
+create index if not exists idx_import_jobs_center_executed_at
+  on public.import_jobs(center_id, executed_at desc);
